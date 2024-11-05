@@ -1,13 +1,140 @@
-body {
+html, body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  padding: 0;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+.main_section {
+  background-color: lightblue;
+  width: 100%;
+  height: 100dvh;
+}
+
+.frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -42%);
+  width: min(60vw, 60vh);
+  max-width: 285px;
+  height: min(70vw, 70vh);
+  max-height: 330px;
+  border: 2px solid black;
+  background-color: wheat;
+  filter: drop-shadow(0 0 0.3em black);
+}
+
+.game_pad {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  align-content: space-evenly;
+  width: min(50vw, 50vh);
+  max-width: 235px;
+  height: min(50vw, 50vh);
+  max-height: 235px;
+  background-color: #6EA9A9;
+  border: 2px solid black;
+  filter: drop-shadow(0 0 0.1em black);
+}
+
+.game_button {
+  border: 2px solid black;
+  width: 27%;
+  height: 27%;
+  font-size: min(min(5vw, 5vh), 24px);
+  background-color: #426F6F;
+  filter: drop-shadow(0 0 0.1em black);
+}
+
+.game_button:hover {
+  cursor: pointer;
+}
+
+.game_button:disabled {
+  background-color: darkslategray;
+  color: wheat;
+}
+
+.control_pad {
+  position: absolute;
+  top: calc(50% + min(min(50vw, 50vh), 235px) / 2 + 0.8vh);
+  left: 50%;
+  transform: translate(-50%, 0);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  align-content: space-evenly;
+  width: min(50vw, 50vh);
+  max-width: 235px;
+  height: min(10vw, 10vh);
+  max-height: 50px;
+  background-color: #6EA9A9;
+  border: 2px solid black;
+  filter: drop-shadow(0 0 0.1em black);
+}
+
+.control_button {
+  border: 2px solid black;
+  background-color: #426F6F;
+  color: wheat;
+  font-weight: bold;
+  font-size: min(min(3vw, 3vh), 14px);
+  width: 27%;
+  height: 60%;
+  filter: drop-shadow(0 0 0.1em black);
+}
+
+.control_button:hover {
+  cursor: pointer;
+}
+
+.control_button:disabled {
+  background-color: darkslategray;
+  color: wheat;
+}
+
+.material-symbols-outlined {
+  border: 2px solid black;
+}
+
+.popup {
+  border: 2px solid black;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+  width: min(55vw, 55vh);
+  max-width: 260px;
+  height: min(25vw, 25vh);
+  max-height: 118px;
+  background-color: rgba(245, 222, 179, 0.8);
+}
+
+.popup_text {
+  width: 85%;
+  height: 20%;
+  color: black;
+  font-size: min(min(6vw, 6vh), 24px);
+  text-align: center;
+}
+
+.popup_button {
+  border: 2px solid black;
+  font-size: min(min(5vw, 5vh), 24px);
+  line-height: 30%;
+  width: 85%;
+  height: 30%;
+  text-align: center;
+}
+
+.popup_button:hover {
+  cursor: pointer;
 }
