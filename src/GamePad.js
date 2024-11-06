@@ -1,62 +1,5 @@
 import {useEffect, useState} from "react";
 
-const checkWinner = (buttonMatrix, inRow) => {
-
-    let counter;
-    for (const row of buttonMatrix) {
-        counter = 1;
-        for (let i = 1; i < row.length; i++) {
-            if (row[i].value === row[i - 1].value) {
-                counter++;
-                if (counter === inRow) return true;
-            } else {
-                counter = 1;
-            }
-        }
-    }
-    return false;
-}
-
-const stupidRobot = (buttonMatrix) => {
-    let robotSymbol = "0";
-    let userSymbol = "X"
-    const columns = buttonMatrix[0].map((_, index) => buttonMatrix.map((item) => item[index]));
-
-    for (const symbol of [robotSymbol, userSymbol]) {
-
-        for (const row of buttonMatrix) {
-            if (row.filter((item) => item.value === symbol).length === 2 &&
-                row.filter((item) => item.disabled).length !== row.length) {
-                const index = row.findIndex(item => item.disabled === false);
-                row[index] = {...row[index], value: robotSymbol, disabled: true};
-                return buttonMatrix;
-            }
-        }
-
-        for (const column of columns) {
-            if (column.filter((item) => item.value === symbol).length === 2 &&
-                column.filter((item) => item.disabled).length !== column.length) {
-                const button = column.find(item => item.disabled === false);
-                buttonMatrix[button.row_index][button.column_index] = {
-                    ...button, value: robotSymbol, disabled: true
-                }
-                return buttonMatrix;
-            }
-        }
-    }
-
-    while (true) {
-        let randomRow = Math.floor(Math.random() * 3);
-        let randomColumn = Math.floor(Math.random() * 3);
-        if (!buttonMatrix[randomRow][randomColumn].disabled) {
-            return buttonMatrix.map((rows) => rows.map((button) =>
-                (button.row_index === randomRow && button.column_index === randomColumn) ?
-                    {...button, value: robotSymbol, disabled: true} : button
-            ))
-        }
-    }
-}
-
 export const GamePad = ({ rows, columns }) => {
 
     const [buttonMatrix, set_buttonMatrix] = useState(Array(rows).fill(null).map((_, row_index) => {
@@ -69,6 +12,75 @@ export const GamePad = ({ rows, columns }) => {
             };
         });
     }))
+    const inRow = 3;
+
+    const checkProgress = (buttonMatrix, inRow, checkFor = null) => {
+
+        for (let i = 0; i < buttonMatrix.length; i++) {
+            for (let j = 0; j < buttonMatrix[0].length; j++) {
+
+                for (const sequence of [[0, 1], [1, 0], [1, 1], [1, -1]]) {
+
+                    const tempArray = [buttonMatrix[i][j]]
+                    let counter = 1;
+                    for (let k = 1; k < inRow; k++) {
+                        const iToCompare = i + sequence[0] * k;
+                        const jToCompare = j + sequence[1] * k;
+
+                        if (iToCompare >= buttonMatrix.length ||
+                            jToCompare >= buttonMatrix.length ||
+                            jToCompare < 0) {
+                            break;
+                        }
+
+                        tempArray.push(buttonMatrix[iToCompare][jToCompare])
+
+                        if (checkFor) {
+                            (buttonMatrix[iToCompare][jToCompare].value === buttonMatrix[i][j].value) && counter++;
+                            if (k === inRow - 1 && counter === checkFor) {
+                                const index = tempArray.findIndex(item => !item.disabled)
+                                return tempArray[index]
+                            }
+                        } else {
+                            if (buttonMatrix[iToCompare][jToCompare].value === buttonMatrix[i][j].value) {
+                                counter++;
+                                if (counter === inRow) return true;
+                            } else break;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    const stupidRobot = (buttonMatrix, inRow) => {
+        let robotSymbol = "0";
+        let userSymbol = "X";
+
+        for (const symbol of [robotSymbol, userSymbol]) {
+            for (let i = inRow - 1; i > 1; i--) {
+                const progress = checkProgress(buttonMatrix, inRow, i);
+                if (progress) {
+                    return buttonMatrix.map((rows) => rows.map((button) =>
+                        (button.row_index === progress.row_index && button.column_index === progress.column_index) ?
+                            {...button, value: robotSymbol, disabled: true} : button
+                    ))
+                }
+            }
+        }
+
+        while (true) {
+            let randomRow = Math.floor(Math.random() * 3);
+            let randomColumn = Math.floor(Math.random() * 3);
+            if (!buttonMatrix[randomRow][randomColumn].disabled) {
+                return buttonMatrix.map((rows) => rows.map((button) =>
+                    (button.row_index === randomRow && button.column_index === randomColumn) ?
+                        {...button, value: robotSymbol, disabled: true} : button
+                ))
+            }
+        }
+    }
 
     const handle_click = (row_index, column_index) => {
 
@@ -82,7 +94,7 @@ export const GamePad = ({ rows, columns }) => {
 
         set_buttonMatrix(tempMatrix);
 
-        if (checkWinner(tempMatrix, 3)) {
+        if (checkProgress(tempMatrix, inRow)) {
             setTimeout(() => {
                 alert("Winner");
             }, 5)
@@ -91,8 +103,8 @@ export const GamePad = ({ rows, columns }) => {
                 alert("Draw");
             })
         } else {
-            tempMatrix = stupidRobot(tempMatrix);
-            if (checkWinner(tempMatrix, 3)) {
+            tempMatrix = stupidRobot(tempMatrix, inRow);
+            if (checkProgress(tempMatrix, inRow)) {
                 setTimeout(() => {
                     alert("Robot Wins !");
                 }, 5)
