@@ -15,13 +15,13 @@ const Popup = ({ popupText, restart }) => {
     )
 }
 
-const ControlPad = ({ rstButton, buttonX, buttonO, visibility }) => {
+const ControlPad = ({ rstButton, buttonX, buttonO, symbolState }) => {
     return (
         <section className="control_pad">
             <button
                 className="control_button"
                 id="x_button"
-                disabled={visibility}
+                disabled={symbolState.xDisabled}
                 onClick={buttonX}
             >
                 X
@@ -29,7 +29,7 @@ const ControlPad = ({ rstButton, buttonX, buttonO, visibility }) => {
             <button
                 className="control_button"
                 id="o_button"
-                disabled={visibility}
+                disabled={symbolState.oDisabled}
                 onClick={buttonO}
             >
                 0
@@ -66,7 +66,8 @@ export const GamePad = ({rows, columns}) => {
     const [symbolState, setSymbolState] = useState({
         user: "X",
         robot: "0",
-        disabled: false
+        xDisabled: true,
+        oDisabled: false
     })
 
     const checkProgress = (buttonMatrix, inRow, checkFor = null, symbol = "") => {
@@ -140,7 +141,8 @@ export const GamePad = ({rows, columns}) => {
 
         setSymbolState({
             ...symbolState,
-            disabled: true
+            xDisabled: true,
+            oDisabled: true
         })
 
         let tempMatrix = buttonMatrix;
@@ -181,6 +183,12 @@ export const GamePad = ({rows, columns}) => {
             text: "",
             visibility: false
         })
+        setSymbolState({
+            user: "X",
+            robot: "0",
+            xDisabled: true,
+            oDisabled: false
+        })
     }
 
     const handleSymbolClick = (Symbol) => {
@@ -213,7 +221,7 @@ export const GamePad = ({rows, columns}) => {
                 );
             }))}
             <ControlPad
-                visibility={symbolState.disabled}
+                symbolState={symbolState}
                 buttonX={() => handleSymbolClick("X")}
                 buttonO={() => handleSymbolClick("0")}
                 rstButton={() => restart()} />
