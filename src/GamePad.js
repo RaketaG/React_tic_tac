@@ -1,8 +1,51 @@
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 
-export const GamePad = ({ rows, columns }) => {
+const Popup = ({ popupText, restart }) => {
+    return (
+        <div className="popup">
+            <span className="popup_text">{popupText}</span>
+            <button
+                className="popup_button"
+                id="new_game_button"
+                onClick={restart}
+            >
+                New Game
+            </button>
+        </div>
+    )
+}
 
-    const [buttonMatrix, set_buttonMatrix] = useState(Array(rows).fill(null).map((_, row_index) => {
+const ControlPad = ({ rstButton, buttonX, buttonO }) => {
+    return (
+        <section className="control_pad">
+            <button
+                className="control_button"
+                id="x_button"
+                onClick={buttonX}
+            >
+                X
+            </button>
+            <button
+                className="control_button"
+                id="o_button"
+                onClick={buttonO}
+            >
+                0
+            </button>
+            <button
+                className="control_button"
+                id="restart_button"
+                onClick={rstButton}
+            >
+                RST
+            </button>
+        </section>
+    )
+}
+
+export const GamePad = ({rows, columns}) => {
+
+    const matrixOriginalState = Array(rows).fill(null).map((_, row_index) => {
         return Array(columns).fill(null).map((_, column_index) => {
             return {
                 row_index,
@@ -11,10 +54,15 @@ export const GamePad = ({ rows, columns }) => {
                 disabled: false
             };
         });
-    }))
+    })
     const inRow = 3;
+    const [buttonMatrix, setButtonMatrix] = useState(matrixOriginalState)
+    const [popupText, setPopupText] = useState("");
+    const [popupVisible, setPopupVisibility] = useState(false);
+    const [userSymbol, setUserSymbol] = useState("X");
+    const [robotSymbol, setRobotSymbol] = useState("0");
 
-    const checkProgress = (buttonMatrix, inRow, checkFor = null) => {
+    const checkProgress = (buttonMatrix, inRow, checkFor = null, symbol = "") => {
 
         for (let i = 0; i < buttonMatrix.length; i++) {
             for (let j = 0; j < buttonMatrix[0].length; j++) {
@@ -36,10 +84,11 @@ export const GamePad = ({ rows, columns }) => {
                         tempArray.push(buttonMatrix[iToCompare][jToCompare])
 
                         if (checkFor) {
-                            (buttonMatrix[iToCompare][jToCompare].value === buttonMatrix[i][j].value) && counter++;
+                            (buttonMatrix[iToCompare][jToCompare].value === buttonMatrix[i][j].value &&
+                                buttonMatrix[i][j].value === symbol) && counter++;
                             if (k === inRow - 1 && counter === checkFor) {
                                 const index = tempArray.findIndex(item => !item.disabled)
-                                return tempArray[index]
+                                if (index) return tempArray[index]
                             }
                         } else {
                             if (buttonMatrix[iToCompare][jToCompare].value === buttonMatrix[i][j].value) {
@@ -55,12 +104,10 @@ export const GamePad = ({ rows, columns }) => {
     }
 
     const stupidRobot = (buttonMatrix, inRow) => {
-        let robotSymbol = "0";
-        let userSymbol = "X";
-
         for (const symbol of [robotSymbol, userSymbol]) {
             for (let i = inRow - 1; i > 1; i--) {
-                const progress = checkProgress(buttonMatrix, inRow, i);
+                const progress = checkProgress(buttonMatrix, inRow, i, symbol);
+                console.log(progress)
                 if (progress) {
                     return buttonMatrix.map((rows) => rows.map((button) =>
                         (button.row_index === progress.row_index && button.column_index === progress.column_index) ?
@@ -82,35 +129,47 @@ export const GamePad = ({ rows, columns }) => {
         }
     }
 
-    const handle_click = (row_index, column_index) => {
+    const handleClick = (row_index, column_index) => {
 
         let tempMatrix = buttonMatrix;
 
         tempMatrix = tempMatrix.map((rows) =>
             rows.map((button) =>
                 (button.row_index === row_index && button.column_index === column_index) ?
-                    {...button, value: "X", disabled: true} : button
+                    {...button, value: userSymbol, disabled: true} : button
         ))
 
-        set_buttonMatrix(tempMatrix);
+        setButtonMatrix(tempMatrix);
 
         if (checkProgress(tempMatrix, inRow)) {
-            setTimeout(() => {
-                alert("Winner");
-            }, 5)
+            setPopupVisibility(true);
+            setPopupText("User Wins !");
         } else if (tempMatrix.every((rows) => rows.every((item) => item.disabled))) {
-            setTimeout(() => {
-                alert("Draw");
-            })
+            setPopupVisibility(true);
+            setPopupText("Draw !");
         } else {
             tempMatrix = stupidRobot(tempMatrix, inRow);
             if (checkProgress(tempMatrix, inRow)) {
-                setTimeout(() => {
-                    alert("Robot Wins !");
-                }, 5)
+                setPopupVisibility(true);
+                setPopupText("Robot Wins !");
             }
         }
-        set_buttonMatrix(tempMatrix)
+        setButtonMatrix(tempMatrix)
+    }
+
+    const restart = () => {
+        setButtonMatrix(matrixOriginalState);
+        setPopupVisibility(false);
+    }
+
+    const handleX = () => {
+        setUserSymbol("X");
+        setRobotSymbol("0");
+    }
+
+    const handleO = () => {
+        setUserSymbol("0");
+        setRobotSymbol("X");
     }
 
     return (
@@ -122,12 +181,18 @@ export const GamePad = ({ rows, columns }) => {
                         className="game_button"
                         value={item.value}
                         disabled={item.disabled}
-                        onClick={() => handle_click(item.row_index, item.column_index)}
+                        onClick={() => handleClick(item.row_index, item.column_index)}
                     >
                         {item.value.length > 1 ? "" : item.value}
                     </button>
                 );
             }))}
+            <ControlPad
+                buttonX={() => handleX()}
+                buttonO={() => handleO()}
+                rstButton={() => restart()} />
+            {popupVisible && <Popup popupText={popupText} restart={() => restart()}/>}
         </section>
+
     );
 }
