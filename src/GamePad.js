@@ -15,12 +15,13 @@ const Popup = ({ popupText, restart }) => {
     )
 }
 
-const ControlPad = ({ rstButton, buttonX, buttonO }) => {
+const ControlPad = ({ rstButton, buttonX, buttonO, visibility }) => {
     return (
         <section className="control_pad">
             <button
                 className="control_button"
                 id="x_button"
+                disabled={visibility}
                 onClick={buttonX}
             >
                 X
@@ -28,6 +29,7 @@ const ControlPad = ({ rstButton, buttonX, buttonO }) => {
             <button
                 className="control_button"
                 id="o_button"
+                disabled={visibility}
                 onClick={buttonO}
             >
                 0
@@ -57,10 +59,15 @@ export const GamePad = ({rows, columns}) => {
     })
     const inRow = 3;
     const [buttonMatrix, setButtonMatrix] = useState(matrixOriginalState)
-    const [popupText, setPopupText] = useState("");
-    const [popupVisible, setPopupVisibility] = useState(false);
-    const [userSymbol, setUserSymbol] = useState("X");
-    const [robotSymbol, setRobotSymbol] = useState("0");
+    const [popupState, setPopupState] = useState({
+        text: "",
+        visibility: false
+    })
+    const [symbolState, setSymbolState] = useState({
+        user: "X",
+        robot: "0",
+        disabled: false
+    })
 
     const checkProgress = (buttonMatrix, inRow, checkFor = null, symbol = "") => {
 
@@ -104,14 +111,14 @@ export const GamePad = ({rows, columns}) => {
     }
 
     const stupidRobot = (buttonMatrix, inRow) => {
-        for (const symbol of [robotSymbol, userSymbol]) {
+        for (const symbol of [symbolState.robot, symbolState.user]) {
             for (let i = inRow - 1; i > 1; i--) {
                 const progress = checkProgress(buttonMatrix, inRow, i, symbol);
                 console.log(progress)
                 if (progress) {
                     return buttonMatrix.map((rows) => rows.map((button) =>
                         (button.row_index === progress.row_index && button.column_index === progress.column_index) ?
-                            {...button, value: robotSymbol, disabled: true} : button
+                            {...button, value: symbolState.robot, disabled: true} : button
                     ))
                 }
             }
@@ -123,7 +130,7 @@ export const GamePad = ({rows, columns}) => {
             if (!buttonMatrix[randomRow][randomColumn].disabled) {
                 return buttonMatrix.map((rows) => rows.map((button) =>
                     (button.row_index === randomRow && button.column_index === randomColumn) ?
-                        {...button, value: robotSymbol, disabled: true} : button
+                        {...button, value: symbolState.robot, disabled: true} : button
                 ))
             }
         }
@@ -131,27 +138,38 @@ export const GamePad = ({rows, columns}) => {
 
     const handleClick = (row_index, column_index) => {
 
+        setSymbolState({
+            ...symbolState,
+            disabled: true
+        })
+
         let tempMatrix = buttonMatrix;
 
         tempMatrix = tempMatrix.map((rows) =>
             rows.map((button) =>
                 (button.row_index === row_index && button.column_index === column_index) ?
-                    {...button, value: userSymbol, disabled: true} : button
+                    {...button, value: symbolState.user, disabled: true} : button
         ))
 
         setButtonMatrix(tempMatrix);
 
         if (checkProgress(tempMatrix, inRow)) {
-            setPopupVisibility(true);
-            setPopupText("User Wins !");
+            setPopupState({
+                text: "User Wins !",
+                visibility: true
+            })
         } else if (tempMatrix.every((rows) => rows.every((item) => item.disabled))) {
-            setPopupVisibility(true);
-            setPopupText("Draw !");
+            setPopupState({
+                text: "Draw !",
+                visibility: true
+            })
         } else {
             tempMatrix = stupidRobot(tempMatrix, inRow);
             if (checkProgress(tempMatrix, inRow)) {
-                setPopupVisibility(true);
-                setPopupText("Robot Wins !");
+                setPopupState({
+                    text: "Robot Wins !",
+                    visibility: true
+                })
             }
         }
         setButtonMatrix(tempMatrix)
@@ -159,17 +177,24 @@ export const GamePad = ({rows, columns}) => {
 
     const restart = () => {
         setButtonMatrix(matrixOriginalState);
-        setPopupVisibility(false);
+        setPopupState({
+            text: "",
+            visibility: false
+        })
     }
 
-    const handleX = () => {
-        setUserSymbol("X");
-        setRobotSymbol("0");
-    }
-
-    const handleO = () => {
-        setUserSymbol("0");
-        setRobotSymbol("X");
+    const handleSymbolClick = (Symbol) => {
+        Symbol === "X" ?
+            setSymbolState({
+                user: "X",
+                robot: "0",
+                disabled: false
+            }) :
+            setSymbolState({
+                user: "0",
+                robot: "X",
+                disabled: false
+            })
     }
 
     return (
@@ -188,10 +213,11 @@ export const GamePad = ({rows, columns}) => {
                 );
             }))}
             <ControlPad
-                buttonX={() => handleX()}
-                buttonO={() => handleO()}
+                visibility={symbolState.disabled}
+                buttonX={() => handleSymbolClick("X")}
+                buttonO={() => handleSymbolClick("0")}
                 rstButton={() => restart()} />
-            {popupVisible && <Popup popupText={popupText} restart={() => restart()}/>}
+            {popupState.visibility && <Popup popupText={popupState.text} restart={() => restart()}/>}
         </section>
 
     );
